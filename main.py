@@ -186,7 +186,7 @@ def crear_ingrediente(data: IngredienteCreate):
     nuevo_id = cursor.fetchone()["id"]
     db.commit()
     cursor.close(); db.close()
-    return {"id": nuevo_id, **data.model_dump()}
+    return {"id": nuevo_id, **data.dict()}
 
 @app.get("/ingredientes", tags=["Ingredientes"])
 def listar_ingredientes():
@@ -247,7 +247,7 @@ def crear_producto(data: ProductoCreate):
     nuevo_id = cursor.fetchone()["id"]
     db.commit()
     cursor.close(); db.close()
-    return {"id": nuevo_id, **data.model_dump()}
+    return {"id": nuevo_id, **data.dict()}
 
 @app.get("/productos", tags=["Productos"])
 def listar_productos():
