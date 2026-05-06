@@ -3,7 +3,7 @@
 //  SweetManager frontend
 // ============================================================
 
-const API = 'http://localhost:8000';
+const API = window.location.origin;
 
 // ── Helpers ─────────────────────────────────────────────────
 
