@@ -8,6 +8,8 @@ from collections import deque
 import psycopg2
 import psycopg2.extras
 import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -509,3 +511,9 @@ def cambiar_estado(pedido_id: int, estado: str):
     if rows == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     return {"mensaje": f"Estado actualizado a {estado}"}
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/app")
+def frontend():
+    return FileResponse("static/index.html")
