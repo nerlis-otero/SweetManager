@@ -212,7 +212,7 @@ async function saveProduct() {
         showToast('Producto guardado.');
         ['productName','productPrice','productDesc'].forEach(id => document.getElementById(id).value = '');
         clearProductImage();
-        setTimeout(() => loadProductos(), 800);
+        loadProductos();
     } catch (_) {}
 }
 
@@ -445,21 +445,65 @@ function openIngredienteModal()  { document.getElementById('ingredienteModal').c
 function closeIngredienteModal() { document.getElementById('ingredienteModal').classList.remove('show'); }
 
 async function saveIngrediente() {
-    const nombre        = document.getElementById('ingNombre').value.trim();
-    const unidad_medida = document.getElementById('ingUnidad').value.trim();
-    const stock         = parseFloat(document.getElementById('ingStock').value);
-    const stock_minimo  = parseFloat(document.getElementById('ingMinimo').value);
+    const nombre           = document.getElementById('ingNombre').value.trim();
+    const unidad_medida    = document.getElementById('ingUnidad').value.trim();
+    const stock            = parseFloat(document.getElementById('ingStock').value);
+    const stock_minimo     = parseFloat(document.getElementById('ingMinimo').value);
+    const costo_por_unidad = parseFloat(document.getElementById('ingCosto').value) || 0;
     if (!nombre || !unidad_medida || isNaN(stock) || isNaN(stock_minimo)) {
         showToast('Complete todos los campos.', true); return;
     }
     try {
         await apiFetch('/ingredientes', {
             method: 'POST',
-            body: JSON.stringify({ nombre, unidad_medida, stock_actual: stock, stock_minimo }),
+            body: JSON.stringify({ nombre, unidad_medida, stock_actual: stock, stock_minimo, costo_por_unidad }),
         });
         closeIngredienteModal();
         showToast('Ingrediente registrado.');
-        ['ingNombre','ingUnidad','ingStock','ingMinimo'].forEach(id => document.getElementById(id).value = '');
+        ['ingNombre','ingUnidad','ingStock','ingMinimo','ingCosto'].forEach(id => document.getElementById(id).value = '');
+        loadIngredientes();
+    } catch (_) {}
+}
+
+// ── EDITAR / ELIMINAR INGREDIENTE ────────────────────────────
+
+function openEditIngredienteModal(id, nombre, unidad, stock, minimo, costo) {
+    document.getElementById('editIngId').value      = id;
+    document.getElementById('editIngNombre').value  = nombre;
+    document.getElementById('editIngUnidad').value  = unidad;
+    document.getElementById('editIngStock').value   = stock;
+    document.getElementById('editIngMinimo').value  = minimo;
+    document.getElementById('editIngCosto').value   = costo;
+    document.getElementById('editIngModal').classList.add('show');
+}
+function closeEditIngredienteModal() { document.getElementById('editIngModal').classList.remove('show'); }
+
+async function updateIngrediente() {
+    const id               = document.getElementById('editIngId').value;
+    const nombre           = document.getElementById('editIngNombre').value.trim();
+    const unidad_medida    = document.getElementById('editIngUnidad').value.trim();
+    const stock_actual     = parseFloat(document.getElementById('editIngStock').value);
+    const stock_minimo     = parseFloat(document.getElementById('editIngMinimo').value);
+    const costo_por_unidad = parseFloat(document.getElementById('editIngCosto').value) || 0;
+    if (!nombre || !unidad_medida || isNaN(stock_actual) || isNaN(stock_minimo)) {
+        showToast('Complete todos los campos.', true); return;
+    }
+    try {
+        await apiFetch(`/ingredientes/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ nombre, unidad_medida, stock_actual, stock_minimo, costo_por_unidad }),
+        });
+        closeEditIngredienteModal();
+        showToast('Ingrediente actualizado.');
+        loadIngredientes();
+    } catch (_) {}
+}
+
+async function eliminarIngrediente(id, nombre) {
+    if (!confirm(`¿Seguro que deseas eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+        await apiFetch(`/ingredientes/${id}`, { method: 'DELETE' });
+        showToast('Ingrediente eliminado.');
         loadIngredientes();
     } catch (_) {}
 }

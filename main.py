@@ -240,6 +240,19 @@ def actualizar_stock(ingrediente_id: int, cantidad: float):
         raise HTTPException(status_code=404, detail="Ingrediente no encontrado")
     return {"mensaje": "Stock actualizado correctamente"}
 
+@app.delete("/ingredientes/{ingrediente_id}", tags=["Ingredientes"])
+def eliminar_ingrediente(ingrediente_id: int):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM public._recetas WHERE ingrediente_id = %s", (ingrediente_id,))
+    cursor.execute("DELETE FROM public._ingredientes WHERE id = %s", (ingrediente_id,))
+    db.commit()
+    rows = cursor.rowcount
+    cursor.close(); db.close()
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="Ingrediente no encontrado")
+    return {"mensaje": "Ingrediente eliminado correctamente"}
+
 @app.post("/productos", tags=["Productos"])
 def crear_producto(data: ProductoCreate):
     db = get_db()
@@ -325,14 +338,14 @@ def calcular_costo(producto_id: int):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-    SELECT p.nombre, p.precio_venta,
-           ROUND(SUM(r.cantidad * i.costo_por_unidad), 2) AS costo_produccion
-    FROM public._productos p
-    JOIN public._recetas r ON r.producto_id = p.id
-    JOIN public._ingredientes i ON i.id = r.ingrediente_id
-    WHERE p.id = %s
-    GROUP BY p.id, p.nombre, p.precio_venta
-""", (producto_id,))
+        SELECT p.nombre, p.precio_venta,
+               ROUND(SUM(r.cantidad * i.costo_por_unidad), 2) AS costo_produccion
+        FROM public._productos p
+        JOIN public._recetas r ON r.producto_id = p.id
+        JOIN public._ingredientes i ON i.id = r.ingrediente_id
+        WHERE p.id = %s
+        GROUP BY p.id
+    """, (producto_id,))
     resultado = cursor.fetchone()
     cursor.close(); db.close()
     if not resultado:
