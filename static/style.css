@@ -874,7 +874,11 @@ body {
 }
 .btn-icon-close:hover { background: var(--accent-soft); color: var(--text); }
 
-.modal-body { padding: 20px; }
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
 
 .modal-footer {
     padding: 14px 20px;
