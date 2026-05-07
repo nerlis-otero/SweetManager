@@ -76,6 +76,9 @@ class ProductoCreate(BaseModel):
     descripcion: Optional[str] = None
     precio_venta: float
 
+class ProductoImagenUpdate(BaseModel):
+    image_url: str
+
 class RecetaItem(BaseModel):
     ingrediente_id: int
     cantidad: float
@@ -290,6 +293,21 @@ def actualizar_producto(producto_id: int, data: ProductoCreate):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return {"mensaje": "Producto actualizado correctamente"}
 
+@app.put("/productos/{producto_id}/imagen-url", tags=["Productos"])
+def actualizar_imagen_producto(producto_id: int, data: ProductoImagenUpdate):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE public._productos SET image_url = %s WHERE id = %s",
+        (data.image_url, producto_id)
+    )
+    db.commit()
+    rows = cursor.rowcount
+    cursor.close(); db.close()
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return {"image_url": data.image_url}
+
 @app.delete("/productos/{producto_id}", tags=["Productos"])
 def eliminar_producto(producto_id: int):
     db = get_db()
@@ -344,7 +362,7 @@ def calcular_costo(producto_id: int):
         JOIN public._recetas r ON r.producto_id = p.id
         JOIN public._ingredientes i ON i.id = r.ingrediente_id
         WHERE p.id = %s
-        GROUP BY p.id
+        GROUP BY p.id, p.nombre, p.precio_venta
     """, (producto_id,))
     resultado = cursor.fetchone()
     cursor.close(); db.close()

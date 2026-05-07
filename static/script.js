@@ -47,6 +47,35 @@ function safeText(value) {
 
 // ── Navegación ───────────────────────────────────────────────
 
+const SUPABASE_URL = 'https://kredwdoutyanfmyuqedp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_SG78Ins3PHYrdiKG-BxcNw_6aHChaUw';
+const PRODUCT_IMAGES_BUCKET = 'product-images';
+
+async function uploadProductImage(productId, imageFile) {
+    const ext = imageFile.name.split('.').pop().toLowerCase();
+    const fileName = `${productId}_${Date.now()}.${ext}`;
+    const uploadResp = await fetch(`${SUPABASE_URL}/storage/v1/object/${PRODUCT_IMAGES_BUCKET}/${fileName}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': imageFile.type || 'application/octet-stream',
+        },
+        body: imageFile,
+    });
+
+    if (!uploadResp.ok) {
+        const detail = await uploadResp.text().catch(() => '');
+        throw new Error(detail || 'No se pudo subir la imagen del producto.');
+    }
+
+    const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/${PRODUCT_IMAGES_BUCKET}/${fileName}`;
+    await apiFetch(`/productos/${productId}/imagen-url`, {
+        method: 'PUT',
+        body: JSON.stringify({ image_url: imageUrl }),
+    });
+    return imageUrl;
+}
+
 const sectionLoaders = {
     inicio: loadDashboard,
     productos: loadProductos,
@@ -205,25 +234,7 @@ async function saveProduct() {
         const prod = await apiFetch('/productos', { method: 'POST', body: JSON.stringify({ nombre, descripcion, precio_venta }) });
 
         if (imageFile && prod.id) {
-            const SUPABASE_URL = 'https://kredwdoutyanfmyuqedp.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_SG78Ins3PHYrdiKG-BxcNw_6aHChaUw';
-            const ext = imageFile.name.split('.').pop().toLowerCase();
-            const fileName = `${prod.id}_${Date.now()}.${ext}`;
-            const uploadResp = await fetch(`${SUPABASE_URL}/storage/v1/object/product-images/${fileName}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': imageFile.type,
-                },
-                body: imageFile,
-            });
-            if (uploadResp.ok) {
-                const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/product-images/${fileName}`;
-                await apiFetch(`/productos/${prod.id}/imagen-url`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ image_url: imageUrl }),
-                });
-            }
+            await uploadProductImage(prod.id, imageFile);
         }
 
         closeProductModal();
@@ -306,9 +317,7 @@ async function updateProduct() {
     try {
         await apiFetch(`/productos/${id}`, { method: 'PUT', body: JSON.stringify({ nombre, descripcion, precio_venta }) });
         if (imageFile) {
-            const formData = new FormData();
-            formData.append('file', imageFile);
-            await fetch(`${API}/productos/${id}/imagen`, { method: 'POST', body: formData });
+            await uploadProductImage(id, imageFile);
         }
         closeEditProductModal();
         showToast('Producto actualizado.');
