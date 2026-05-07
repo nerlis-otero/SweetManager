@@ -58,7 +58,9 @@ async function uploadProductImage(productId, imageFile) {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_KEY,
             'Content-Type': imageFile.type || 'application/octet-stream',
+            'x-upsert': 'true',
         },
         body: imageFile,
     });
@@ -218,7 +220,9 @@ async function verCostoProducto(id, nombre) {
     try {
         const data = await apiFetch(`/productos/${id}/costo`);
         showToast(`${nombre} — Costo: ${formatPrice(data.costo_produccion)} | Margen: ${formatPrice(data.margen_ganancia)}`);
-    } catch (_) {}
+    } catch (e) {
+        if (e.message) showToast(e.message, true);
+    }
 }
 
 function openProductModal()  { document.getElementById('productModal').classList.add('show'); }
@@ -242,7 +246,9 @@ async function saveProduct() {
         ['productName','productPrice','productDesc'].forEach(id => document.getElementById(id).value = '');
         clearProductImage();
         setTimeout(() => loadProductos(), 500);
-    } catch (_) {}
+    } catch (e) {
+        if (e.message) showToast(e.message, true);
+    }
 }
 function clearProductImage() {
     document.getElementById('productImage').value = '';
@@ -322,7 +328,9 @@ async function updateProduct() {
         closeEditProductModal();
         showToast('Producto actualizado.');
         loadProductos();
-    } catch (_) {}
+    } catch (e) {
+        if (e.message) showToast(e.message, true);
+    }
 }
 
 async function eliminarProducto(id, nombre) {

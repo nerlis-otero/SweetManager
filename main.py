@@ -357,7 +357,7 @@ def calcular_costo(producto_id: int):
     cursor = db.cursor()
     cursor.execute("""
         SELECT p.nombre, p.precio_venta,
-               ROUND(SUM(r.cantidad * i.costo_por_unidad), 2) AS costo_produccion
+               ROUND((SUM(r.cantidad * i.costo_por_unidad))::numeric, 2) AS costo_produccion
         FROM public._productos p
         JOIN public._recetas r ON r.producto_id = p.id
         JOIN public._ingredientes i ON i.id = r.ingrediente_id
