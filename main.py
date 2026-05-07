@@ -325,14 +325,14 @@ def calcular_costo(producto_id: int):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.nombre, p.precio_venta,
-               ROUND(SUM(r.cantidad * i.costo_por_unidad), 2) AS costo_produccion
-        FROM public._productos p
-        JOIN public._recetas r ON r.producto_id = p.id
-        JOIN public._ingredientes i ON i.id = r.ingrediente_id
-        WHERE p.id = %s
-        GROUP BY p.id
-    """, (producto_id,))
+    SELECT p.nombre, p.precio_venta,
+           ROUND(SUM(r.cantidad * i.costo_por_unidad), 2) AS costo_produccion
+    FROM public._productos p
+    JOIN public._recetas r ON r.producto_id = p.id
+    JOIN public._ingredientes i ON i.id = r.ingrediente_id
+    WHERE p.id = %s
+    GROUP BY p.id, p.nombre, p.precio_venta
+""", (producto_id,))
     resultado = cursor.fetchone()
     cursor.close(); db.close()
     if not resultado:
