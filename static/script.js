@@ -212,7 +212,7 @@ async function saveProduct() {
         showToast('Producto guardado.');
         ['productName','productPrice','productDesc'].forEach(id => document.getElementById(id).value = '');
         clearProductImage();
-        loadProductos();
+        setTimeout(() => loadProductos(), 800);
     } catch (_) {}
 }
 
