@@ -203,19 +203,36 @@ async function saveProduct() {
     if (!nombre || isNaN(precio_venta)) { showToast('Nombre y precio son obligatorios.', true); return; }
     try {
         const prod = await apiFetch('/productos', { method: 'POST', body: JSON.stringify({ nombre, descripcion, precio_venta }) });
+
         if (imageFile && prod.id) {
-            const formData = new FormData();
-            formData.append('file', imageFile);
-            await fetch(`${API}/productos/${prod.id}/imagen`, { method: 'POST', body: formData });
+            const SUPABASE_URL = 'https://kredwdoutyanfmyuqedp.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_SG78Ins3PHYrdiKG-BxcNw_6aHChaUw';
+            const ext = imageFile.name.split('.').pop().toLowerCase();
+            const fileName = `${prod.id}_${Date.now()}.${ext}`;
+            const uploadResp = await fetch(`${SUPABASE_URL}/storage/v1/object/product-images/${fileName}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': imageFile.type,
+                },
+                body: imageFile,
+            });
+            if (uploadResp.ok) {
+                const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/product-images/${fileName}`;
+                await apiFetch(`/productos/${prod.id}/imagen-url`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ image_url: imageUrl }),
+                });
+            }
         }
+
         closeProductModal();
         showToast('Producto guardado.');
         ['productName','productPrice','productDesc'].forEach(id => document.getElementById(id).value = '');
         clearProductImage();
-        loadProductos();
+        setTimeout(() => loadProductos(), 500);
     } catch (_) {}
 }
-
 function clearProductImage() {
     document.getElementById('productImage').value = '';
     document.getElementById('productImagePreview').style.display = 'none';
