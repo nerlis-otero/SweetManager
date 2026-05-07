@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
@@ -8,6 +8,8 @@ from collections import deque
 import psycopg2
 import psycopg2.extras
 import os
+import uuid
+import httpx
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
@@ -511,6 +513,43 @@ def cambiar_estado(pedido_id: int, estado: str):
     if rows == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     return {"mensaje": f"Estado actualizado a {estado}"}
+
+@app.post("/productos/{producto_id}/imagen", tags=["Productos"])
+async def subir_imagen_producto(producto_id: int, file: UploadFile = File(...)):
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(status_code=500, detail="Supabase no configurado en variables de entorno")
+
+    ext = (file.filename or "img").rsplit(".", 1)[-1].lower()
+    if ext not in ("jpg", "jpeg", "png", "webp", "gif"):
+        raise HTTPException(status_code=400, detail="Formato no permitido. Usa JPG, PNG, WEBP o GIF.")
+
+    file_name = f"{producto_id}_{uuid.uuid4().hex}.{ext}"
+    content = await file.read()
+
+    upload_url = f"{SUPABASE_URL}/storage/v1/object/product-images/{file_name}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": file.content_type or "application/octet-stream",
+    }
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(upload_url, content=content, headers=headers)
+    if resp.status_code not in (200, 201):
+        raise HTTPException(status_code=502, detail=f"Error al subir imagen a Supabase: {resp.text}")
+
+    public_url = f"{SUPABASE_URL}/storage/v1/object/public/product-images/{file_name}"
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("UPDATE public._productos SET image_url = %s WHERE id = %s", (public_url, producto_id))
+    db.commit()
+    rows = cursor.rowcount
+    cursor.close(); db.close()
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return {"image_url": public_url}
+
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

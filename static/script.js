@@ -156,9 +156,12 @@ function renderProductos(productos) {
     if (!productos.length) { grid.innerHTML = '<p class="muted">No hay productos registrados.</p>'; return; }
     grid.innerHTML = productos.map((p) => {
         const initial = (p.nombre || '?').charAt(0).toUpperCase();
+        const thumbHtml = p.image_url
+            ? `<div class="product-thumb" aria-hidden="true"><img src="${p.image_url}" alt="${p.nombre}"></div>`
+            : `<div class="product-thumb" aria-hidden="true"><span>${initial}</span></div>`;
         return `
         <div class="product-card">
-            <div class="product-thumb" aria-hidden="true"><span>${initial}</span></div>
+            ${thumbHtml}
             <div class="product-content">
                 <h4 class="product-name">${p.nombre}</h4>
                 <p class="product-desc">${p.descripcion || 'Sin descripción'}</p>
@@ -190,15 +193,44 @@ async function saveProduct() {
     const nombre       = document.getElementById('productName').value.trim();
     const precio_venta = parseFloat(document.getElementById('productPrice').value);
     const descripcion  = document.getElementById('productDesc').value.trim();
+    const imageFile    = document.getElementById('productImage').files[0];
     if (!nombre || isNaN(precio_venta)) { showToast('Nombre y precio son obligatorios.', true); return; }
     try {
-        await apiFetch('/productos', { method: 'POST', body: JSON.stringify({ nombre, descripcion, precio_venta }) });
+        const prod = await apiFetch('/productos', { method: 'POST', body: JSON.stringify({ nombre, descripcion, precio_venta }) });
+        if (imageFile && prod.id) {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            await fetch(`${API}/productos/${prod.id}/imagen`, { method: 'POST', body: formData });
+        }
         closeProductModal();
         showToast('Producto guardado.');
         ['productName','productPrice','productDesc'].forEach(id => document.getElementById(id).value = '');
+        clearProductImage();
         loadProductos();
     } catch (_) {}
 }
+
+function clearProductImage() {
+    document.getElementById('productImage').value = '';
+    document.getElementById('productImagePreview').style.display = 'none';
+    document.getElementById('productImagePreviewImg').src = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('productImage');
+    if (input) {
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('productImagePreviewImg').src = e.target.result;
+                document.getElementById('productImagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+});
 
 // ── RECETAS (RF-09) ──────────────────────────────────────────
 

@@ -211,6 +211,17 @@
                 <input type="text" id="productName" placeholder="Nombre" class="form-input">
                 <input type="number" id="productPrice" placeholder="Precio de venta" class="form-input">
                 <textarea id="productDesc" placeholder="Descripción (opcional)" class="form-textarea"></textarea>
+                <div class="img-upload-wrap">
+                    <label class="img-upload-label" for="productImage">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Subir imagen (opcional)
+                    </label>
+                    <input type="file" id="productImage" accept="image/*" class="img-upload-input">
+                    <div id="productImagePreview" class="img-preview-wrap" style="display:none;">
+                        <img id="productImagePreviewImg" src="" alt="Vista previa" class="img-preview">
+                        <button type="button" class="img-remove-btn" onclick="clearProductImage()" aria-label="Quitar imagen">&times;</button>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="closeProductModal()" class="btn btn-secondary">Cancelar</button>
