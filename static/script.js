@@ -446,6 +446,9 @@ function renderIngredientes(ings, alertas = []) {
         <div class="ing-grid">
             ${ings.map(i => {
                 const bajo = alertaIds.has(i.id);
+                const nombre = safeText(i.nombre).replace(/'/g, "\\'");
+                const unidad = safeText(i.unidad_medida).replace(/'/g, "\\'");
+                const costo = Number(i.costo_por_unidad || 0);
                 return `
                 <div class="ing-card ${bajo ? 'ing-card--warn' : 'ing-card--ok'}">
                     <div class="ing-card-head">
@@ -464,10 +467,24 @@ function renderIngredientes(ings, alertas = []) {
                             <p class="ing-stat-label">Mínimo</p>
                             <p class="ing-stat-val">${i.stock_minimo}</p>
                         </div>
+                        <div class="ing-stat ing-stat--muted">
+                            <p class="ing-stat-label">Costo</p>
+                            <p class="ing-stat-val ing-stat-val--price">${formatPrice(costo)}</p>
+                        </div>
                     </div>
-                    <button type="button" class="btn btn-primary btn-block btn-sm"
-                        onclick="openStockModal(${i.id}, '${i.nombre.replace(/'/g,"\\'")}', ${i.stock_actual}, '${i.unidad_medida}')">
-                        Ajustar stock
+                    <div class="product-actions-row">
+                        <button type="button" class="btn btn-primary btn-sm btn-flex"
+                            onclick="openStockModal(${i.id}, '${nombre}', ${i.stock_actual}, '${unidad}')">
+                            Ajustar stock
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm btn-flex"
+                            onclick="openEditIngredienteModal(${i.id}, '${nombre}', '${unidad}', ${i.stock_actual}, ${i.stock_minimo}, ${costo})">
+                            Editar
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-block btn-danger-text"
+                        onclick="eliminarIngrediente(${i.id}, '${nombre}')">
+                        Eliminar
                     </button>
                 </div>`;
             }).join('')}
@@ -530,7 +547,9 @@ async function updateIngrediente() {
         closeEditIngredienteModal();
         showToast('Ingrediente actualizado.');
         loadIngredientes();
-    } catch (_) {}
+    } catch (e) {
+        if (e.message) showToast(e.message, true);
+    }
 }
 
 async function eliminarIngrediente(id, nombre) {

@@ -144,6 +144,7 @@ body {
 .ing-stat--muted { background: var(--surface); }
 .ing-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 .ing-stat-val { font-size: 20px; font-weight: 700; color: var(--text); }
+.ing-stat-val--price { font-size: 16px; overflow-wrap: anywhere; }
 .ing-stat-val--warn { color: var(--danger); }
 
 .badge { font-size: 11px; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
