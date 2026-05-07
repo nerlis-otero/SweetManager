@@ -230,6 +230,38 @@
         </div>
     </div>
 
+    <div id="editProductModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar producto</h3>
+                <button type="button" class="btn-icon-close" onclick="closeEditProductModal()" aria-label="Cerrar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editProductId">
+                <input type="text" id="editProductName" placeholder="Nombre" class="form-input">
+                <input type="number" id="editProductPrice" placeholder="Precio de venta" class="form-input">
+                <textarea id="editProductDesc" placeholder="Descripción (opcional)" class="form-textarea"></textarea>
+                <div class="img-upload-wrap">
+                    <label class="img-upload-label" for="editProductImage">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Cambiar imagen (opcional)
+                    </label>
+                    <input type="file" id="editProductImage" accept="image/*" class="img-upload-input">
+                    <div id="editProductImagePreview" class="img-preview-wrap" style="display:none;">
+                        <img id="editProductImagePreviewImg" src="" alt="Vista previa" class="img-preview">
+                        <button type="button" class="img-remove-btn" onclick="clearEditProductImage()" aria-label="Quitar imagen">&times;</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditProductModal()" class="btn btn-secondary">Cancelar</button>
+                <button type="button" onclick="updateProduct()" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+
     <div id="recetaModal" class="modal">
         <div class="modal-content modal-wide">
             <div class="modal-header">

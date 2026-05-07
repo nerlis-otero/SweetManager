@@ -174,6 +174,12 @@ function renderProductos(productos) {
                     <button type="button" class="btn btn-primary btn-sm btn-flex"
                         onclick="openRecetaModal(${p.id}, '${p.nombre.replace(/'/g,"\\'")}')">Receta</button>
                 </div>
+                <div class="product-actions-row" style="margin-top:6px;">
+                    <button type="button" class="btn btn-secondary btn-sm btn-flex"
+                        onclick="openEditProductModal(${p.id}, '${p.nombre.replace(/'/g,"\\'")}', ${p.precio_venta}, '${(p.descripcion||'').replace(/'/g,"\\'")}', '${p.image_url||''}')">Editar</button>
+                    <button type="button" class="btn btn-sm btn-flex btn-danger-text"
+                        onclick="eliminarProducto(${p.id}, '${p.nombre.replace(/'/g,"\\'")}')">Eliminar</button>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -230,7 +236,77 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.readAsDataURL(file);
         });
     }
+
+    const editInput = document.getElementById('editProductImage');
+    if (editInput) {
+        editInput.addEventListener('change', () => {
+            const file = editInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('editProductImagePreviewImg').src = e.target.result;
+                document.getElementById('editProductImagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 });
+
+// ── EDITAR PRODUCTO ──────────────────────────────────────────
+
+function openEditProductModal(id, nombre, precio, descripcion, imageUrl) {
+    document.getElementById('editProductId').value        = id;
+    document.getElementById('editProductName').value      = nombre;
+    document.getElementById('editProductPrice').value     = precio;
+    document.getElementById('editProductDesc').value      = descripcion;
+    document.getElementById('editProductImage').value     = '';
+    if (imageUrl) {
+        document.getElementById('editProductImagePreviewImg').src = imageUrl;
+        document.getElementById('editProductImagePreview').style.display = 'block';
+    } else {
+        clearEditProductImage();
+    }
+    document.getElementById('editProductModal').classList.add('show');
+}
+
+function closeEditProductModal() {
+    document.getElementById('editProductModal').classList.remove('show');
+}
+
+function clearEditProductImage() {
+    document.getElementById('editProductImage').value = '';
+    document.getElementById('editProductImagePreview').style.display = 'none';
+    document.getElementById('editProductImagePreviewImg').src = '';
+}
+
+async function updateProduct() {
+    const id           = document.getElementById('editProductId').value;
+    const nombre       = document.getElementById('editProductName').value.trim();
+    const precio_venta = parseFloat(document.getElementById('editProductPrice').value);
+    const descripcion  = document.getElementById('editProductDesc').value.trim();
+    const imageFile    = document.getElementById('editProductImage').files[0];
+    if (!nombre || isNaN(precio_venta)) { showToast('Nombre y precio son obligatorios.', true); return; }
+    try {
+        await apiFetch(`/productos/${id}`, { method: 'PUT', body: JSON.stringify({ nombre, descripcion, precio_venta }) });
+        if (imageFile) {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            await fetch(`${API}/productos/${id}/imagen`, { method: 'POST', body: formData });
+        }
+        closeEditProductModal();
+        showToast('Producto actualizado.');
+        loadProductos();
+    } catch (_) {}
+}
+
+async function eliminarProducto(id, nombre) {
+    if (!confirm(`¿Seguro que deseas eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+        await apiFetch(`/productos/${id}`, { method: 'DELETE' });
+        showToast('Producto eliminado.');
+        loadProductos();
+    } catch (_) {}
+}
 
 // ── RECETAS (RF-09) ──────────────────────────────────────────
 

@@ -262,6 +262,35 @@ def listar_productos():
     cursor.close(); db.close()
     return productos
 
+@app.put("/productos/{producto_id}", tags=["Productos"])
+def actualizar_producto(producto_id: int, data: ProductoCreate):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE public._productos SET nombre=%s, descripcion=%s, precio_venta=%s WHERE id=%s",
+        (data.nombre, data.descripcion, data.precio_venta, producto_id)
+    )
+    db.commit()
+    rows = cursor.rowcount
+    cursor.close(); db.close()
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return {"mensaje": "Producto actualizado correctamente"}
+
+@app.delete("/productos/{producto_id}", tags=["Productos"])
+def eliminar_producto(producto_id: int):
+    db = get_db()
+    cursor = db.cursor()
+    # Eliminar recetas asociadas primero
+    cursor.execute("DELETE FROM public._recetas WHERE producto_id = %s", (producto_id,))
+    cursor.execute("DELETE FROM public._productos WHERE id = %s", (producto_id,))
+    db.commit()
+    rows = cursor.rowcount
+    cursor.close(); db.close()
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return {"mensaje": "Producto eliminado correctamente"}
+
 @app.get("/productos/{producto_id}/receta", tags=["Productos"])
 def obtener_receta(producto_id: int):
     db = get_db()
