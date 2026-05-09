@@ -512,7 +512,7 @@ def listar_pedidos():
     cursor.close(); db.close()
     for p in pedidos:
         if p.get("fecha"):
-            p["fecha"] = str(p["fecha"])
+            p["fecha"] = str(p["fecha"])[:10]
     return pedidos
 
 @app.get("/pedidos/cliente/{cliente_id}", tags=["Pedidos"])
