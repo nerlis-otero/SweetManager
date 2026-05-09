@@ -40,7 +40,13 @@ function getStatusClass(estado) {
 function formatPrice(value) {
     return `$${Number(value).toLocaleString('es-CO')}`;
 }
-
+function formatFecha(fecha) {
+    if (!fecha) return '—';
+    const [year, month, day] = fecha.split('-');
+    const meses = ['enero','febrero','marzo','abril','mayo','junio',
+                   'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return `${parseInt(day)} de ${meses[parseInt(month)-1]} de ${year}`;
+}
 function safeText(value) {
     return value === null || value === undefined ? '' : String(value);
 }
