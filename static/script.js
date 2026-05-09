@@ -42,16 +42,13 @@ function formatPrice(value) {
 }
 function formatFecha(fecha) {
     if (!fecha) return '—';
-    
-    // Si la fecha viene con espacio (ej: "2026-05-09 20:00:00"), 
-    // la convertimos a formato ISO ("2026-05-09T20:00:00Z") para que JS sepa que es UTC
-    let fechaLimpia = fecha.replace(" ", "T");
-    if (!fechaLimpia.endsWith("Z") && !fechaLimpia.includes("-05")) {
-        fechaLimpia += "Z"; 
-    }
 
-    const date = new Date(fechaLimpia);
-    
+    // La BD devuelve algo como "2026-05-09 20:15:30.123456" (hora local de Colombia, UTC-5).
+    // NO añadimos "Z" ni offset: lo parseamos como hora local del navegador,
+    // que en Colombia ya es UTC-5, así que la hora se muestra tal cual fue guardada.
+    const fechaISO = fecha.replace(" ", "T").replace(/\.\d+$/, ""); // quita microsegundos
+    const date = new Date(fechaISO);
+
     if (isNaN(date)) return fecha;
 
     return date.toLocaleString('es-CO', {
@@ -60,7 +57,7 @@ function formatFecha(fecha) {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true // Para que salga "a. m." o "p. m."
+        hour12: true // "a. m." / "p. m."
     });
 }
 function safeText(value) {
@@ -673,7 +670,7 @@ async function openPedidoDetalleModal(pedidoId) {
         meta.innerHTML = `
             <div class="pedido-detalle-meta-grid">
                 <div><span class="lbl">Cliente</span><span class="val">${ped.cliente_nombre || '—'}</span></div>
-                <div><span class="lbl">Fecha</span><span class="val">${ped.fecha || '—'}</span></div>
+                <div><span class="lbl">Fecha</span><span class="val">${formatFecha(ped.fecha)}</span></div>
                 <div><span class="lbl">Estado</span><span class="val"><span class="order-status status-${getStatusClass(ped.estado)}">${ped.estado}</span></span></div>
             </div>`;
         if (!data.lineas || !data.lineas.length) {

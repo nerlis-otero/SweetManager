@@ -400,7 +400,7 @@ def crear_pedido(data: PedidoCreate):
         total += subtotal
         detalles.append((item.producto_id, item.cantidad, subtotal))
     cursor.execute(
-        "INSERT INTO public._pedidos (cliente_id, fecha, estado, total) VALUES (%s, CURRENT_DATE, 'Pendiente', %s) RETURNING id",
+        "INSERT INTO public._pedidos (cliente_id, fecha, estado, total) VALUES (%s, NOW(), 'Pendiente', %s) RETURNING id",
         (data.cliente_id, round(total, 2))
     )
     pedido_id = cursor.fetchone()["id"]
@@ -486,7 +486,7 @@ def detalle_pedido(pedido_id: int):
     cursor.close()
     db.close()
     if pedido.get("fecha"):
-        pedido["fecha"] = str(pedido["fecha"])[:16]
+        pedido["fecha"] = str(pedido["fecha"])
     out_lineas = []
     for row in lineas:
         r = dict(row)
@@ -513,7 +513,7 @@ def listar_pedidos():
     cursor.close(); db.close()
     for p in pedidos:
         if p.get("fecha"):
-            p["fecha"] = str(p["fecha"])[:16]
+            p["fecha"] = str(p["fecha"])
     return pedidos
 
 @app.get("/pedidos/cliente/{cliente_id}", tags=["Pedidos"])
