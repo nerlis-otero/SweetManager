@@ -152,7 +152,7 @@ function renderRecentOrders(pedidos) {
             <div class="order-header">
                 <div>
                     <div class="order-client">${p.cliente_nombre || 'Cliente'}</div>
-                    <div class="order-meta">Pedido #${p.id} · ${p.fecha}</div>
+                    <div class=\"order-meta\">Pedido #${p.id} · ${formatFecha(p.fecha)}</div>
                 </div>
                 <span class="order-status status-${getStatusClass(p.estado)}">${p.estado}</span>
             </div>
@@ -620,7 +620,7 @@ function renderPedidos(pedidos) {
                 <div class="order-header">
                     <div>
                         <div class="order-client">${p.cliente_nombre || 'Cliente #' + p.cliente_id}</div>
-                        <div class="order-meta">Pedido #${p.id} · ${p.fecha}</div>
+                        <div class=\"order-meta\">Pedido #${p.id} · ${formatFecha(p.fecha)}</div>
                     </div>
                     <span class="order-status status-${getStatusClass(p.estado)}">${p.estado}</span>
                 </div>
