@@ -473,7 +473,7 @@ def detalle_pedido(pedido_id: int):
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     cursor.execute(
         """
-        SELECT dp.producto_id, pr.nombre AS producto_nombre, dp.cantidad, dp.subtotal
+        SELECT dp.producto_id, pr.nombre AS producto_nombre, dp.cantidad, pr.precio_venta
         FROM public._detalle_pedido dp
         JOIN public._productos pr ON pr.id = dp.producto_id
         WHERE dp.pedido_id = %s
@@ -490,8 +490,10 @@ def detalle_pedido(pedido_id: int):
     for row in lineas:
         r = dict(row)
         cant = float(r["cantidad"])
-        sub = float(r["subtotal"])
-        r["precio_unitario"] = round(sub / cant, 2) if cant else 0.0
+        precio = float(r["precio_venta"] or 0)
+        sub = round(precio * cant, 2)
+        r["subtotal"] = sub
+        r["precio_unitario"] = precio
         out_lineas.append(r)
     return {"pedido": pedido, "lineas": out_lineas}
 
