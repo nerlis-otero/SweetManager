@@ -42,10 +42,12 @@ function formatPrice(value) {
 }
 function formatFecha(fecha) {
     if (!fecha) return '—';
-    const [year, month, day] = fecha.split('-');
-    const meses = ['enero','febrero','marzo','abril','mayo','junio',
-                   'julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    return `${parseInt(day)} de ${meses[parseInt(month)-1]} de ${year}`;
+    const date = new Date(fecha);
+    if (isNaN(date)) return fecha;
+    return date.toLocaleString('es-CO', {
+        day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
 }
 function safeText(value) {
     return value === null || value === undefined ? '' : String(value);
