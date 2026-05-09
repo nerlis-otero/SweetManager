@@ -485,7 +485,7 @@ def detalle_pedido(pedido_id: int):
     cursor.close()
     db.close()
     if pedido.get("fecha"):
-        pedido["fecha"] = str(pedido["fecha"])[:10]
+        pedido["fecha"] = str(pedido["fecha"])[:16]
     out_lineas = []
     for row in lineas:
         r = dict(row)
