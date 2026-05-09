@@ -42,11 +42,25 @@ function formatPrice(value) {
 }
 function formatFecha(fecha) {
     if (!fecha) return '—';
-    const date = new Date(fecha);
+    
+    // Si la fecha viene con espacio (ej: "2026-05-09 20:00:00"), 
+    // la convertimos a formato ISO ("2026-05-09T20:00:00Z") para que JS sepa que es UTC
+    let fechaLimpia = fecha.replace(" ", "T");
+    if (!fechaLimpia.endsWith("Z") && !fechaLimpia.includes("-05")) {
+        fechaLimpia += "Z"; 
+    }
+
+    const date = new Date(fechaLimpia);
+    
     if (isNaN(date)) return fecha;
+
     return date.toLocaleString('es-CO', {
-        day: 'numeric', month: 'long', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true // Para que salga "a. m." o "p. m."
     });
 }
 function safeText(value) {
