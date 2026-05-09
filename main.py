@@ -389,30 +389,44 @@ def agregar_receta(producto_id: int, items: List[RecetaItem]):
 def crear_pedido(data: PedidoCreate):
     db = get_db()
     cursor = db.cursor()
-    total = 0.0
-    detalles = []
-    for item in data.detalles:
-        cursor.execute("SELECT precio_venta FROM public._productos WHERE id = %s", (item.producto_id,))
-        prod = cursor.fetchone()
-        if not prod:
-            raise HTTPException(status_code=404, detail=f"Producto {item.producto_id} no encontrado")
-        subtotal = float(prod["precio_venta"]) * item.cantidad
-        total += subtotal
-        detalles.append((item.producto_id, item.cantidad, subtotal))
-    cursor.execute(
-        "INSERT INTO public._pedidos (cliente_id, fecha, estado, total) VALUES (%s, NOW(), 'Pendiente', %s) RETURNING id",
-        (data.cliente_id, round(total, 2))
-    )
-    pedido_id = cursor.fetchone()["id"]
-    db.commit()
-    for prod_id, cant, sub in detalles:
+    try:
+        total = 0.0
+        detalles = []
+        for item in data.detalles:
+            cursor.execute("SELECT precio_venta FROM public._productos WHERE id = %s", (item.producto_id,))
+            prod = cursor.fetchone()
+            if not prod:
+                raise HTTPException(status_code=404, detail=f"Producto {item.producto_id} no encontrado")
+            precio = float(prod["precio_venta"] or 0)
+            cantidad = int(item.cantidad)
+            subtotal = round(precio * cantidad, 2)
+            total += subtotal
+            detalles.append((item.producto_id, cantidad, subtotal))
+
         cursor.execute(
-            "INSERT INTO public._detalle_pedido (pedido_id, producto_id, cantidad, subtotal) VALUES (%s,%s,%s,%s)",
-            (pedido_id, prod_id, cant, sub)
+            "INSERT INTO public._pedidos (cliente_id, fecha, estado, total) VALUES (%s, NOW(), 'Pendiente', %s) RETURNING id",
+            (data.cliente_id, round(total, 2))
         )
-    db.commit()
-    cursor.close(); db.close()
-    return {"id": pedido_id, "cliente_id": data.cliente_id, "total": round(total, 2), "estado": "Pendiente"}
+        pedido_id = cursor.fetchone()["id"]
+
+        for prod_id, cant, sub in detalles:
+            cursor.execute(
+                "INSERT INTO public._detalle_pedido (pedido_id, producto_id, cantidad, subtotal) VALUES (%s, %s, %s, %s)",
+                (pedido_id, prod_id, cant, sub)
+            )
+
+        db.commit()
+        return {"id": pedido_id, "cliente_id": data.cliente_id, "total": round(total, 2), "estado": "Pendiente"}
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al crear el pedido: {str(e)}")
+    finally:
+        cursor.close()
+        db.close()
 
 @app.get("/pedidos/cola/produccion", tags=["Pedidos"])
 def cola_produccion():
