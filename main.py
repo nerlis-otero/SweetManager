@@ -486,7 +486,7 @@ def detalle_pedido(pedido_id: int):
     cursor.close()
     db.close()
     if pedido.get("fecha"):
-        pedido["fecha"] = str(pedido["fecha"])[:16]
+        pedido["fecha"] = pedido["fecha"].isoformat() if hasattr(pedido["fecha"], 'isoformat') else str(pedido["fecha"])
     out_lineas = []
     for row in lineas:
         r = dict(row)
@@ -513,7 +513,7 @@ def listar_pedidos():
     cursor.close(); db.close()
     for p in pedidos:
         if p.get("fecha"):
-            p["fecha"] = str(p["fecha"])[:16]
+            p["fecha"] = p["fecha"].isoformat() if hasattr(p["fecha"], 'isoformat') else str(p["fecha"])
     return pedidos
 
 @app.get("/pedidos/cliente/{cliente_id}", tags=["Pedidos"])
